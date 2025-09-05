@@ -1,0 +1,27 @@
+name: Mirror to Other Org
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install git-filter-repo
+        run: pip install git-filter-repo
+
+      - name: Remove workflow files from history for mirroring
+        run: git filter-repo --path .github/workflows --invert-paths
+
+      - name: Push to mirror repo
+        run: |
+          git config --unset-all http.https://github.com/.extraheader
+          git remote add mirror https://x-access-token:${{ secrets.MIRROR_REPO_TOKEN }}@github.com/OpenAnime/DyDySample.git
+          git push --force --mirror mirror
